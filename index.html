@@ -19,6 +19,7 @@
       --text: #171725; --muted: #5d6074; --line: rgba(25,25,50,.12); --header: rgba(246,247,251,.78);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    img, video, iframe { max-width: 100%; height: auto; }
     html { scroll-behavior: smooth; scroll-padding-top: 90px; }
     body {
       font-family: "Plus Jakarta Sans", sans-serif; background: var(--bg); color: var(--text);
@@ -38,6 +39,8 @@
     .dot { color: var(--cyan); }
     .nav-links { display: flex; list-style: none; gap: 26px; }
     .nav-links a { color: var(--muted); font-size: .88rem; transition: color .25s; }
+    .menu-btn { display: none; border: 1px solid var(--line); background: var(--surface); color: var(--text); border-radius: 10px; width: 42px; height: 40px; padding: 9px; cursor: pointer; }
+    .menu-btn span { display: block; height: 2px; width: 100%; margin: 4px 0; border-radius: 2px; background: currentColor; transition: transform .2s, opacity .2s; }
     .nav-links a:hover { color: var(--cyan); }
     .theme-btn { border: 1px solid var(--line); color: var(--text); background: var(--surface); border-radius: 999px; padding: 8px 12px; cursor: pointer; font-size: .8rem; transition: transform .25s, background .25s; }
     .theme-btn:hover { transform: translateY(-2px); background: var(--surface-hover); }
@@ -88,19 +91,36 @@
     @keyframes gradientFlow { to { background-position: 200% center; } }
     @keyframes blink { 50% { opacity: 0; } }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; } .reveal { opacity: 1; transform: none; } }
-    @media (max-width: 620px) {
+    @media (max-width: 700px) {
       header { top: 8px; padding: 0 10px; }
-      .nav-container { padding: 11px 13px; gap: 10px; }
-      .nav-links { gap: 12px; }
-      .nav-links a { font-size: .78rem; }
-      .theme-btn { font-size: 0; padding: 8px 10px; }
-      .theme-btn::first-letter { font-size: 1rem; }
-      .content-wrapper { width: calc(100% - 24px); }
-      .hero-section { padding-top: 125px; }
-      .scroll-note { bottom: 20px; }
-      .card-section { border-radius: 18px; }
+      .nav-container { position: relative; padding: 10px 12px; gap: 9px; border-radius: 15px; }
+      .logo { font-size: 1rem; }
+      .menu-btn { display: block; margin-left: auto; flex: 0 0 auto; }
+      .nav-links { display: none; position: absolute; top: calc(100% + 8px); left: 0; right: 0; padding: 10px; flex-direction: column; gap: 0; border: 1px solid var(--line); border-radius: 14px; background: var(--bg); box-shadow: 0 15px 35px rgba(0,0,0,.22); }
+      .nav-links.open { display: flex; }
+      .nav-links a { display: block; padding: 12px 10px; font-size: .95rem; border-radius: 8px; }
+      .nav-links a:hover { background: var(--surface); }
+      .theme-btn { flex: 0 0 auto; padding: 8px 10px; }
+      .content-wrapper { width: calc(100% - 28px); }
+      .hero-section { min-height: 92svh; padding-top: 120px; padding-bottom: 90px; }
+      h1 { font-size: clamp(2.8rem, 13vw, 4.7rem); }
+      .hero-subtitle { font-size: 1rem; }
+      .hero-buttons { width: 100%; flex-wrap: wrap; }
+      .hero-buttons .btn { flex: 1 1 150px; justify-content: center; text-align: center; }
+      .card-section { padding: 24px 18px; border-radius: 18px; }
+      .projects-grid { grid-template-columns: minmax(0, 1fr); }
+      .project-card { padding: 20px; }
+      .scroll-note { bottom: 16px; }
+      footer { padding-bottom: 28px; }
     }
-    @media (max-width: 390px) { .nav-links { gap: 8px; } .nav-links a { font-size: .72rem; } .logo { font-size: 1rem; } }
+    @media (max-width: 390px) {
+      .nav-container { gap: 7px; }
+      .logo { font-size: .94rem; }
+      .theme-btn { padding: 7px 8px; }
+      .eyebrow { font-size: .72rem; padding: 6px 10px; }
+      .hero-buttons .btn { flex-basis: 100%; }
+      .skill-tag { font-size: .76rem; padding: 8px 10px; }
+    }
   </style>
 </head>
 <body>
@@ -110,7 +130,8 @@
   <header>
     <nav class="nav-container" aria-label="Main navigation">
       <a href="#hero" class="logo">IFRAZ<span class="dot">.</span></a>
-      <ul class="nav-links">
+      <button id="menu-toggle" class="menu-btn" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="site-links"><span></span><span></span><span></span></button>
+      <ul class="nav-links" id="site-links">
         <li><a href="#about">About</a></li>
         <li><a href="#projects">Projects</a></li>
         <li><a href="#contact">Contact</a></li>
@@ -158,12 +179,28 @@
       <p class="section-kicker">Have an idea?</p>
       <h2>Let's Connect</h2>
       <p>Interested in working together or checking out my projects? Send me a message and let's talk.</p>
-      <div class="contact-links"><a href="mailto:ifrazmasood@gmail.com" class="btn btn-primary">Send Email ↗</a></div>
+      <div class="contact-links"><a href="https://mail.google.com/mail/?view=cm&fs=1&to=ifrazmasood%40gmail.com" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Send Email ↗</a></div>
     </section>
   </main>
   <footer>Designed &amp; built by Ifraz <span class="dot">·</span> <span id="year"></span></footer>
 
   <script>
+    // Responsive mobile navigation.
+    const menuButton = document.getElementById('menu-toggle');
+    const siteLinks = document.getElementById('site-links');
+    menuButton.addEventListener('click', () => {
+      const isOpen = siteLinks.classList.toggle('open');
+      menuButton.setAttribute('aria-expanded', String(isOpen));
+      menuButton.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
+    });
+    siteLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        siteLinks.classList.remove('open');
+        menuButton.setAttribute('aria-expanded', 'false');
+        menuButton.setAttribute('aria-label', 'Open navigation menu');
+      });
+    });
+
     // Reveal sections when they enter the viewport.
     const revealItems = document.querySelectorAll('.reveal');
     if ('IntersectionObserver' in window) {
